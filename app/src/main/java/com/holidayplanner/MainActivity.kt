@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
@@ -25,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.holidayplanner.ui.theme.HolidayPlannerTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.compose.runtime.getValue
 
 
 @AndroidEntryPoint
@@ -52,7 +54,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun HomeScreen(innerPadding: PaddingValues,viewModel: MainViewModel ) {
+fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     val uiState: HomeState by viewModel.homeUiState.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier
@@ -64,7 +66,7 @@ fun HomeScreen(innerPadding: PaddingValues,viewModel: MainViewModel ) {
         Spacer(modifier = Modifier.height(20.dp))
         AIResponseCard("some response")
         Spacer(modifier = Modifier.height(20.dp))
-        InputArea("Holiday to china for 3 days",uiState.input ) { }
+        InputArea("Holiday to china for 3 days", viewModel.inputField) { }
     }
 }
 
@@ -84,15 +86,23 @@ fun RetryButton(content: String, modifier: Modifier, onRetry: () -> Unit) {
 
 @Composable
 fun AIResponseCard(response: String) {
-    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primary)) {
-        Text(modifier = Modifier.fillMaxSize(0.9f), text = response)
+    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .fillMaxHeight(0.6f), text = response
+        )
     }
 }
 
 @Composable
 fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> Unit) {
     Row {
-        TextField(state = inputState, placeholder = { Text(placeHolder) })
+        TextField(
+            state = inputState,
+            placeholder = { Text(placeHolder) },
+
+            )
         SubmitButton(onSubmit = { onSubmit() }, modifier = Modifier)
     }
 }

@@ -3,15 +3,17 @@ package com.holidayplanner.service
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ServiceComponent
+import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ServiceComponent::class)
+@InstallIn(SingletonComponent::class)
 object ServiceModule {
 
     @Provides
-    fun CohereApi(retrofit: Retrofit): CohereHoliday {
+    @Singleton
+    fun provideCohereApi(retrofit: Retrofit): CohereHoliday {
         return retrofit.create(CohereHoliday::class.java)
     }
 }
