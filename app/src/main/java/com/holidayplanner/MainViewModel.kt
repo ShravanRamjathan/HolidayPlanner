@@ -11,15 +11,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday): ViewModel() {
-    private val _homeUiState = MutableStateFlow(homeState())
-    val homeUiState: StateFlow<homeState> = _homeUiState.asStateFlow()
+    private val _homeUiState = MutableStateFlow(HomeState())
+    val homeUiState: StateFlow<HomeState> = _homeUiState.asStateFlow()
 
     fun submitInput(){
 
     }
 }
 
-data class homeState(
+data class HomeState(
     val response: TextFieldState = TextFieldState(),
     val input: TextFieldState = TextFieldState(),
     val errorMessage: String = "",

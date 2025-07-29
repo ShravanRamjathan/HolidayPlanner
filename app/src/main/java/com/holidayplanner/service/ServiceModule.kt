@@ -8,7 +8,7 @@ import retrofit2.Retrofit
 
 @Module
 @InstallIn(ServiceComponent::class)
-abstract class serviceModule {
+object ServiceModule {
 
     @Provides
     fun CohereApi(retrofit: Retrofit): CohereHoliday {
