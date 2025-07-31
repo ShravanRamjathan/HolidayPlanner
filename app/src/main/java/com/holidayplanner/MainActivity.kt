@@ -15,13 +15,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -94,7 +96,7 @@ fun RetryButton(content: String, modifier: Modifier, onRetry: () -> Unit) {
 
 @Composable
 fun AIResponseCard(responses: List<String>) {
-    val listOfResponse = rememberLazyListState()
+    val lazyResponses = remember { responses }
     ElevatedCard(
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer),
         modifier = Modifier
@@ -102,7 +104,7 @@ fun AIResponseCard(responses: List<String>) {
             .fillMaxHeight(0.8f)
     ) {
         LazyColumn() {
-            items(responses) { response ->
+            items(lazyResponses) { response ->
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -110,7 +112,7 @@ fun AIResponseCard(responses: List<String>) {
                         .padding(10.dp)
                         .background(MaterialTheme.colorScheme.secondary),
                     text = response, textAlign = TextAlign.Center,
-                    )
+                )
             }
         }
     }
@@ -130,10 +132,26 @@ fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> U
     }
 }
 
+@Composable
+fun LoadingCard(modifier: Modifier = Modifier) {
+    ElevatedCard(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiary),
+        modifier = modifier
+            .fillMaxWidth(0.75f)
+            .fillMaxHeight(0.15f)
+    ) {
+        Text("Generating response")
+        CircularProgressIndicator(
+            modifier = modifier.width(30.dp),
+            color = MaterialTheme.colorScheme.secondary
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     HolidayPlannerTheme {
-
+        LoadingCard()
     }
 }
