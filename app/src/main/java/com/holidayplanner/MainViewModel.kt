@@ -6,7 +6,9 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.holidayplanner.model.HolidayPlanner
+import com.holidayplanner.model.Message
 import com.holidayplanner.model.Prompt
+import com.holidayplanner.model.UseCase
 import com.holidayplanner.service.CohereHoliday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,13 +26,13 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
     private val _homeUiState = MutableStateFlow(HomeState())
     val homeUiState: StateFlow<HomeState> = _homeUiState.asStateFlow()
 
-    fun updateResponseMessages(response: String) {
+    fun updateMessages(message: Message) {
         val updatedList = when {
-            response.isNotEmpty() -> _homeUiState.value.responseMessages + response
+            message.message.isNotEmpty() -> _homeUiState.value.messages + message
             else -> throw Exception("There is no valid response message")
         }
         _homeUiState.update { currentState ->
-            currentState.copy(responseMessages = updatedList)
+            currentState.copy(messages = updatedList)
         }
     }
 
@@ -55,11 +58,21 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
                 )
                 val holidayPlanner: HolidayPlanner =
                     cohereHoliday.generateHolidayPlan(prompt)
+                if (holidayPlanner.text.isEmpty()) {
+                    _homeUiState.update { currentState ->
+                        currentState.copy(errorMessage = "Unable to fetch a response, ssh into the server :)")
+                    }
+                }
                 Log.d(
                     "Myapi",
                     "THis is fresh from the api" + holidayPlanner.text
                 )  // lets see if there is something
-                updateResponseMessages(holidayPlanner.text)
+                val responseMessage = Message(
+                    message = holidayPlanner.text,
+                    userCase = UseCase.AI,
+                    dateTime = LocalDateTime.now()
+                )
+                updateMessages(responseMessage)
                 clearTextField()
             } catch (e: Exception) {
                 Log.e("Myapi", e.message, e)
@@ -75,7 +88,7 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
 }
 
 data class HomeState(
-    val responseMessages: List<String> = emptyList<String>(),
+    val messages: List<Message> = emptyList<Message>(),
     val isLoading: Boolean = false,
     val errorMessage: String = "",
 )

@@ -1,9 +1,9 @@
 package com.holidayplanner.model
 
-import java.util.Date
+import java.time.LocalDateTime
 
 data class Message(
-   val message:String = "",
-   val userCase: UseCase,
-   val dateTime: Date
+    val message: String = "",
+    val userCase: UseCase,
+    val dateTime: LocalDateTime,
 )
