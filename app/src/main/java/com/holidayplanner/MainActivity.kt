@@ -78,7 +78,7 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     ) {
         Text("Shrav's Holiday Planner")
         Spacer(modifier = Modifier.height(20.dp))
-        AIResponse(uiState.messages, uiState.isLoading)
+        AIResponse(uiState.messages, loadingState.value)
         Spacer(modifier = Modifier.height(20.dp))
         InputArea(
             "Holiday to china for 3 days",
