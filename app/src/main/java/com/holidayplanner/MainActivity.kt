@@ -5,8 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,10 +25,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -37,7 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -76,19 +78,7 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     ) {
         Text("Shrav's Holiday Planner")
         Spacer(modifier = Modifier.height(20.dp))
-        if (loadingState.value) {
-            Box(
-                Modifier
-                    .fillMaxWidth(0.9f)
-                    .fillMaxHeight(0.8f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                LoadingCard()
-            }
-
-        } else {
-            AIResponse(uiState.messages, uiState.isLoading)
-        }
+        AIResponse(uiState.messages, uiState.isLoading)
         Spacer(modifier = Modifier.height(20.dp))
         InputArea(
             "Holiday to china for 3 days",
@@ -138,13 +128,23 @@ fun AIResponse(messages: List<Message>, isLoading: Boolean) {
 
 @Composable
 fun LoadingAnimation(isLoading: Boolean) {
-
-    if (isLoading) {
-        Card() {
+    var visibile by remember {
+        mutableStateOf(isLoading)
+    }
+    AnimatedVisibility(
+        visible = visibile,
+        enter = slideInHorizontally(),
+        exit = slideOutHorizontally()
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(.65f)
+                .padding(10.dp)
+        ) {
             Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Generating response")
                 CircularProgressIndicator(
-                    modifier = Modifier.width(64.dp),
+                    modifier = Modifier.width(15.dp),
                     color = MaterialTheme.colorScheme.secondary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
@@ -165,30 +165,13 @@ fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> U
     }
 }
 
-@Composable
-fun LoadingCard(modifier: Modifier = Modifier) {
-    ElevatedCard(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiary),
-        modifier = modifier
-            .fillMaxWidth(0.75f)
-            .fillMaxHeight(0.15f)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Generating response", Modifier.padding(10.dp))
-            CircularProgressIndicator(
-                modifier = modifier.width(15.dp),
-                color = MaterialTheme.colorScheme.secondary
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     HolidayPlannerTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            LoadingCard()
+
         }
 
     }
