@@ -15,7 +15,7 @@ object AppModule {
     @Singleton
     fun returnRetroFit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://cohere-serverr-3aef.onrender.com")
+            .baseUrl("https://langlens-server.onrender.com")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
