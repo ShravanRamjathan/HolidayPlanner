@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -46,6 +48,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.holidayplanner.model.Message
+import com.holidayplanner.model.UseCase
 import com.holidayplanner.ui.theme.HolidayPlannerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -105,27 +108,28 @@ fun RetryButton(content: String, modifier: Modifier, onRetry: () -> Unit) {
 
 @Composable
 fun AIResponse(messages: List<Message>, isLoading: Boolean) {
+    ElevatedCard(modifier = Modifier.fillMaxHeight(0.7f).fillMaxWidth(0.95f)) {
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .fillMaxHeight(0.8f)
-    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.8f)
+        ) {
 
-        items(messages) { interaction ->
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.2f)
-                    .padding(10.dp)
-                    .background(MaterialTheme.colorScheme.secondary),
-                text = interaction.message, textAlign = TextAlign.Center,
-            )
+            items(messages) { interaction ->
+                val alignment: Alignment = if (interaction.userCase == UseCase.AI) {
+                    Alignment.CenterStart
+                } else {
+                    Alignment.CenterEnd
+                }
+                Box(contentAlignment = alignment) {
+                    ResponseCard(interaction.message)
+                }
+            }
+
         }
-
+        LoadingAnimation(isLoading)
     }
-    LoadingAnimation(isLoading)
-
 }
 
 @Composable
@@ -140,6 +144,7 @@ fun LoadingAnimation(isLoading: Boolean) {
     ) {
         Card(
             modifier = Modifier
+                .fillMaxHeight(0.5f)
                 .fillMaxWidth(.65f)
                 .padding(10.dp)
         ) {
@@ -167,6 +172,19 @@ fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> U
     }
 }
 
+@Composable
+fun ResponseCard(message: String) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth(0.7f)) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.2f)
+                .padding(20.dp)
+                .background(MaterialTheme.colorScheme.secondary),
+            text = message, textAlign = TextAlign.Center,
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable

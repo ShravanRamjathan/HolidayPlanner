@@ -3,6 +3,7 @@ package com.holidayplanner
 import android.util.Log
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.holidayplanner.model.HolidayPlanner
@@ -22,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday) : ViewModel() {
 
-    val inputField: TextFieldState = TextFieldState()
+    val inputField: TextFieldState =  TextFieldState()
     private val _homeUiState = MutableStateFlow(HomeState())
     val homeUiState: StateFlow<HomeState> = _homeUiState.asStateFlow()
 
@@ -51,16 +52,19 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
     fun submitInput() {
         viewModelScope.launch {
             isLoading()
-            clearTextField()
+
             try {
 
                 Log.d("Myapi", "Attempting")
-                val prompt: Prompt = Prompt(
+                val prompt = Prompt(
                     prompt = inputField.text.toString()
                 )
+                clearTextField()
+                Log.d("Myapi", prompt.prompt)
                 val holidayPlanner: HolidayPlanner =
                     cohereHoliday.generateHolidayPlan(prompt)
                 if (holidayPlanner.text.isEmpty()) {
+                    notLoading()
                     _homeUiState.update { currentState ->
                         currentState.copy(errorMessage = "Unable to fetch a response, ssh into the server :)")
                     }
