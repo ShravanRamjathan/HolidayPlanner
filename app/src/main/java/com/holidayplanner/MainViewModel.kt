@@ -51,7 +51,9 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
     fun submitInput() {
         viewModelScope.launch {
             isLoading()
+            clearTextField()
             try {
+
                 Log.d("Myapi", "Attempting")
                 val prompt: Prompt = Prompt(
                     prompt = inputField.text.toString()
@@ -73,7 +75,9 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
                     dateTime = LocalDateTime.now()
                 )
                 updateMessages(responseMessage)
-                clearTextField()
+                notLoading()
+
+
             } catch (e: Exception) {
                 Log.e("Myapi", e.message, e)
             }

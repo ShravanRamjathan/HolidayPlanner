@@ -38,7 +38,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,10 +65,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// REMEMBER TO SORT OUT THE LOADING STATE ISSUE,
+// ALSO REMEMBER TO HAVE THE MESSAGES HUGGING EACH SIDE DEPENDING ON WHAT TYPE OF USER THEY ARE
+// THEN FINALLY JUST SORT OUT INPUT FIELD SIZING
 @Composable
 fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     val uiState: HomeState by viewModel.homeUiState.collectAsStateWithLifecycle()
-    val loadingState = rememberSaveable { mutableStateOf(uiState.isLoading) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -78,7 +80,7 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     ) {
         Text("Shrav's Holiday Planner")
         Spacer(modifier = Modifier.height(20.dp))
-        AIResponse(uiState.messages, loadingState.value)
+        AIResponse(uiState.messages, uiState.isLoading)
         Spacer(modifier = Modifier.height(20.dp))
         InputArea(
             "Holiday to china for 3 days",
@@ -129,10 +131,10 @@ fun AIResponse(messages: List<Message>, isLoading: Boolean) {
 @Composable
 fun LoadingAnimation(isLoading: Boolean) {
     var visibile by remember {
-        mutableStateOf(isLoading)
+        mutableStateOf(false)
     }
     AnimatedVisibility(
-        visible = visibile,
+        visible = isLoading,
         enter = slideInHorizontally(),
         exit = slideOutHorizontally()
     ) {
