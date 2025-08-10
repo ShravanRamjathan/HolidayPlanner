@@ -54,11 +54,16 @@ class MainViewModel @Inject constructor(private val cohereHoliday: CohereHoliday
             isLoading()
 
             try {
-
+             val userMessage = Message(
+                 message = inputField.text.toString(),
+                 userCase = UseCase.USER,
+                 dateTime = LocalDateTime.now()
+             )
                 Log.d("Myapi", "Attempting")
                 val prompt = Prompt(
                     prompt = inputField.text.toString()
                 )
+                updateMessages(userMessage)
                 clearTextField()
                 Log.d("Myapi", prompt.prompt)
                 val holidayPlanner: HolidayPlanner =

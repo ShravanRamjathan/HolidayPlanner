@@ -38,9 +38,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -108,7 +105,9 @@ fun RetryButton(content: String, modifier: Modifier, onRetry: () -> Unit) {
 
 @Composable
 fun AIResponse(messages: List<Message>, isLoading: Boolean) {
-    ElevatedCard(modifier = Modifier.fillMaxHeight(0.7f).fillMaxWidth(0.95f)) {
+    ElevatedCard(modifier = Modifier
+        .fillMaxHeight(0.7f)
+        .fillMaxWidth(0.95f)) {
 
         LazyColumn(
             modifier = Modifier
@@ -134,9 +133,7 @@ fun AIResponse(messages: List<Message>, isLoading: Boolean) {
 
 @Composable
 fun LoadingAnimation(isLoading: Boolean) {
-    var visibile by remember {
-        mutableStateOf(false)
-    }
+
     AnimatedVisibility(
         visible = isLoading,
         enter = slideInHorizontally(),
@@ -160,17 +157,6 @@ fun LoadingAnimation(isLoading: Boolean) {
     }
 }
 
-@Composable
-fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> Unit) {
-    Row {
-        OutlinedTextField(
-            state = inputState,
-            placeholder = { Text(placeHolder) },
-            modifier = Modifier.fillMaxWidth(0.65f)
-        )
-        SubmitButton(onSubmit = { onSubmit() }, modifier = Modifier)
-    }
-}
 
 @Composable
 fun ResponseCard(message: String) {
@@ -183,6 +169,18 @@ fun ResponseCard(message: String) {
                 .background(MaterialTheme.colorScheme.secondary),
             text = message, textAlign = TextAlign.Center,
         )
+    }
+}
+
+@Composable
+fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> Unit) {
+    Row {
+        OutlinedTextField(
+            state = inputState,
+            placeholder = { Text(placeHolder) },
+            modifier = Modifier.fillMaxWidth(0.65f)
+        )
+        SubmitButton(onSubmit = { onSubmit() }, modifier = Modifier)
     }
 }
 
