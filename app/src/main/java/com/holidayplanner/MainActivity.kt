@@ -1,14 +1,17 @@
 package com.holidayplanner
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,24 +25,37 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +64,7 @@ import com.holidayplanner.model.Message
 import com.holidayplanner.model.UseCase
 import com.holidayplanner.ui.theme.HolidayPlannerTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -65,9 +82,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// REMEMBER TO SORT OUT THE LOADING STATE ISSUE,
-// ALSO REMEMBER TO HAVE THE MESSAGES HUGGING EACH SIDE DEPENDING ON WHAT TYPE OF USER THEY ARE
-// THEN FINALLY JUST SORT OUT INPUT FIELD SIZING
+
 @Composable
 fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     val uiState: HomeState by viewModel.homeUiState.collectAsStateWithLifecycle()
@@ -75,10 +90,12 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: MainViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(innerPadding),
+            .padding(innerPadding)
+            .background(MaterialTheme.colorScheme.primary),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Shrav's Holiday Planner")
+
+        ElevatedCard { Text("Shrav's Holiday Planner") }
         Spacer(modifier = Modifier.height(20.dp))
         AIResponse(uiState.messages, uiState.isLoading)
         Spacer(modifier = Modifier.height(20.dp))
@@ -105,29 +122,70 @@ fun RetryButton(content: String, modifier: Modifier, onRetry: () -> Unit) {
 
 @Composable
 fun AIResponse(messages: List<Message>, isLoading: Boolean) {
-    ElevatedCard(modifier = Modifier
-        .fillMaxHeight(0.7f)
-        .fillMaxWidth(0.95f)) {
-
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxHeight(0.8f)
+            .fillMaxWidth(0.95f),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
         LazyColumn(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .fillMaxHeight(0.8f)
+                .fillMaxWidth()
+                .fillMaxHeight(0.95f),
+            state = listState
         ) {
 
             items(messages) { interaction ->
-                val alignment: Alignment = if (interaction.userCase == UseCase.AI) {
-                    Alignment.CenterStart
-                } else {
-                    Alignment.CenterEnd
+                var visible by remember { mutableStateOf(false) }
+                val alignment: Alignment = when {
+                    interaction.userCase == UseCase.AI ->
+                        Alignment.CenterStart
+
+                    interaction.userCase == UseCase.USER -> Alignment.CenterEnd
+                    else -> Alignment.CenterEnd
                 }
-                Box(contentAlignment = alignment) {
-                    ResponseCard(interaction.message)
+                val color = if (interaction.userCase == UseCase.AI) {
+                    MaterialTheme.colorScheme.secondary
+                } else {
+                    MaterialTheme.colorScheme.tertiary
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                Box(
+                    contentAlignment = alignment,
+                    modifier = Modifier
+                        .isElementVisible({ visible })
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                ) {
+                    Log.d("Myapi", interaction.userCase.name)
+                    ResponseCard(interaction.message, color, isLoading)
+                }
+
+
+            }
+            if (isLoading) {
+                item {
+                    Spacer(Modifier.height(10.dp))
+                    Box(
+                        contentAlignment = Alignment.CenterStart, // Center the loading animation
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp) // Add some vertical padding
+                    ) {
+                        LoadingAnimation(isLoading)
+                    }
+
+                }
+                coroutineScope.launch {
+                    listState.animateScrollToItem(index = messages.size)
                 }
             }
-
         }
-        LoadingAnimation(isLoading)
+
     }
 }
 
@@ -136,17 +194,22 @@ fun LoadingAnimation(isLoading: Boolean) {
 
     AnimatedVisibility(
         visible = isLoading,
-        enter = slideInHorizontally(),
-        exit = slideOutHorizontally()
-    ) {
+        enter = slideInHorizontally(animationSpec = tween(500)),
+        exit = slideOutHorizontally(animationSpec = tween(500)),
+
+        ) {
         Card(
             modifier = Modifier
-                .fillMaxHeight(0.5f)
-                .fillMaxWidth(.65f)
+                .fillMaxWidth(0.8f)
                 .padding(10.dp)
         ) {
-            Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Text("Generating response")
+                Spacer(Modifier.width(20.dp))
                 CircularProgressIndicator(
                     modifier = Modifier.width(15.dp),
                     color = MaterialTheme.colorScheme.secondary,
@@ -159,28 +222,47 @@ fun LoadingAnimation(isLoading: Boolean) {
 
 
 @Composable
-fun ResponseCard(message: String) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth(0.7f)) {
+fun ResponseCard(message: String, cardColor: Color, isLoading: Boolean) {
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(0.8f),
+        colors = CardDefaults.cardColors(containerColor = cardColor)
+    ) {
         Text(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.2f)
                 .padding(20.dp)
-                .background(MaterialTheme.colorScheme.secondary),
+                .background(cardColor),
             text = message, textAlign = TextAlign.Center,
+            color = Color.White
         )
+
+
     }
 }
 
 @Composable
 fun InputArea(placeHolder: String, inputState: TextFieldState, onSubmit: () -> Unit) {
-    Row {
-        OutlinedTextField(
-            state = inputState,
-            placeholder = { Text(placeHolder) },
-            modifier = Modifier.fillMaxWidth(0.65f)
-        )
-        SubmitButton(onSubmit = { onSubmit() }, modifier = Modifier)
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .fillMaxHeight(0.6f),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedTextField(
+                state = inputState,
+                placeholder = { Text(placeHolder) },
+                modifier = Modifier
+                    .fillMaxWidth(0.75f)
+                    .padding(10.dp)
+            )
+            SubmitButton(onSubmit = { onSubmit() }, modifier = Modifier)
+        }
     }
 }
 
@@ -192,5 +274,19 @@ fun GreetingPreview() {
 
         }
 
+    }
+}
+
+private fun Modifier.isElementVisible(onVisibilityChanged: (Boolean) -> Unit) = composed {
+    val isVisible by remember { derivedStateOf { mutableStateOf(false) } }
+    LaunchedEffect(
+        isVisible.value
+    ) { onVisibilityChanged.invoke(isVisible.value) }
+    this.onGloballyPositioned { layoutCoordinates ->
+        isVisible.value = layoutCoordinates.parentLayoutCoordinates?.let {
+            val parentBounds = it.boundsInWindow()
+            val childBounds = layoutCoordinates.boundsInWindow()
+            parentBounds.overlaps(childBounds)
+        } == true
     }
 }
